@@ -1,5 +1,7 @@
 ## This script performs a RDA and detects canddiate SNPs associated with environmental variables 
 
+####HJ seeing if she can edit this from Rstudio  
+
 library(usdm)
 library(vegan)
 
