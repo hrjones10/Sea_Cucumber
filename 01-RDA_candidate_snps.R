@@ -32,6 +32,7 @@ coords <- env1[,2:3]
 env.vars <- env1[,4:ncol(env1)]
 
 # check variance inflation factor (VIF) of environmental variables
+# VIF checks for for multicollinearity among variables
 vif(env.vars)
 
 # scale predictors
