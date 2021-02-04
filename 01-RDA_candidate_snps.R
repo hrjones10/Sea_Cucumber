@@ -33,6 +33,7 @@ env.vars <- env1[,4:ncol(env1)]
 
 # check variance inflation factor (VIF) of environmental variables
 # VIF checks for for multicollinearity among variables
+# testing testing
 vif(env.vars)
 
 # scale predictors
