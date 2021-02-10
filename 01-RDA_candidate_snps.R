@@ -1,4 +1,4 @@
-## This script performs a RDA and detects canddiate SNPs associated with environmental variables 
+## This script performs a RDA and detects candidate SNPs associated with environmental variables 
 
 ####HJ seeing if she can edit this from Rstudio  
 
@@ -11,49 +11,78 @@ snps <- read.table("3699snps_freqs.txt", header = T)
 # convert to matrix
 snp.mat <- as.matrix(snps)
 
-# create vector of site names
+# create vector of Site names
 popnames <- rownames(snp.mat)
-popnames
+popnames 
+#"OGD" "QUA" "HOP" "TBL" "CAL" "TOL" "PRI" "LEG" "JUA" "SEL" "REN" "SGI" "MAZ" "AK1" "AK2" "AK3" "AK4" "LAS" "JER" "TOF" "CRA" "RBY" "SHE" "MAL"
 
-# Hellinger transformation
+# Hellinger transformation of vector of abundances--> relative species composition rather than magnitude of abundance values... accounts for moderately skewed datasets
 snp.hel <- decostand(snp.mat, method = "hellinger")
 
-## ENV DATA
+## Environmental DATA
 
 env1 <- read.table("env_predictors.txt", header = T)
-rownames(env1) <- env1$site
+rownames(env1) <- env1$Site
 rownames(env1)
+View(env1) #file looks good to me
 
 # order rows to match snps
-env1 <- env1[match(popnames, env1$site), ]
-
+env1 <- env1[match(popnames, env1$Site), ] #need to capitalize "Site", be sure to check this on other scripts ####
+View(env1)
 # separate lat/long and env vars
 coords <- env1[,2:3]
 env.vars <- env1[,4:ncol(env1)]
 
+env.vars #okay good got data
+
 # check variance inflation factor (VIF) of environmental variables
 # VIF checks for for multicollinearity among variables
-# testing testing
 vif(env.vars)
+#Variables        VIF
+#1                  Mean_surface_salinity 489.123522
+#2               Minimum_surface_salinity  41.865633
+#3               Maximum_surface_salinity 285.882143
+#4               Mean_surface_temperature  93.946589
+#5            Minimum_surface_temperature  18.261385
+#6            Maximum_surface_temperature  40.639257
+#7  Mean_bottom_chlorophyll_concentration  26.620819
+#8           Mean_bottom_current_velocity   5.438088
+#9           Mean_bottom_dissolved_oxygen  11.829937
+#10               Mean_bottom_temperature  79.323197
+#11            Maximum_bottom_temperature  39.718829
+#12            Minimum_bottom_temperature  23.493223
+#13                  Mean_bottom_salinity   3.830173
+#14         Mean_surface_current_velocity   2.552170
+
 
 # scale predictors
 env.scale <- scale(env.vars, scale = T, center = T)
 
-# run RDA between hellinger transformed SNPs and all environmental variables (9 in total)
+# run reduncancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (9 in total)
 rda1 <- rda(snp.hel ~., data = as.data.frame(env.scale))
 rda0 <- rda(snp.hel ~ 1, data = as.data.frame(env.scale))
 
-summary(rda1)
-RsquareAdj(rda1) 
-anova(rda1) 
+summary(rda1) #summary output of all 6 RDAs
+#Call: rda(formula = snp.hel ~ Mean_surface_salinity + Minimum_surface_salinity +      Maximum_surface_salinity + Mean_surface_temperature + Minimum_surface_temperature +      Maximum_surface_temperature + Mean_bottom_chlorophyll_concentration +      Mean_bottom_current_velocity + Mean_bottom_dissolved_oxygen +      Mean_bottom_temperature + Maximum_bottom_temperature + Minimum_bottom_temperature +      Mean_bottom_salinity + Mean_surface_current_velocity, data = as.data.frame(env.scale)) 
+
+# considers partioning of the variance, species (population here) scores and site scores (weighted sums of species scores)
+
+RsquareAdj(rda1) #why take R squared? ####
+#$r.squared= 0.6493902 + $adj.r.squared- 0.1039971
+anova(rda1) #999 permutations--> what does this mean? #### 
+
+#readout:      Df   Variance    F     Pr(>F)  
+#Model        14   0.064515  1.1907   0.015 *
+#Residual     9    0.034832     
+
 anova(rda1, by = "axis") 
+#this considers all of the variation across each RDA (1-14) rather than one model with 14 Df
 
-
-##################################################################
+##################################################################PART 2
 
 #### DETECT OUTLIERS   
 
-# Function for detecting outliers (from Forester et al. 2018)
+# Function for detecting outliers (from Forester et al. 2018) #should we check this paper out?####
 outliers <- function(x,z){
   lims <- mean(x) + c(-1, 1) * z * sd(x)                   # find +/- z sd from mean loading     
   x[x < lims[1] | x > lims[2]]   # locus names in these tails
