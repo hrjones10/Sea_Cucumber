@@ -4,7 +4,7 @@ library(ade4)
 library(ggplot2)
 library(reshape)
 library(stringr)
-library(stackr) #v.0.4.5
+library(stackr) #v.0.4.5 ###package doesn't appear to exist?
 
 strata <- read.table("strata.cucumbers.717ind.txt", header = T)
 

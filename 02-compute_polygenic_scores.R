@@ -4,15 +4,38 @@
 
 allele_freq <- read.table("candidates.frq.strat", header = T, stringsAsFactors = F)
 head(allele_freq)
+#read out
+#  CHR  SNP     CLST A1 A2 MAF MAC NCHROBS
+#1   1 18276_19    1  C  T   0   0      62
+#2   1 18276_19    2  C  T   0   0      62
+#3   1 18276_19    3  C  T   0   0      56
+#4   1 18276_19    4  C  T   0   0      62
+#5   1 18276_19    5  C  T   0   0      40
+#6   1 18276_19    6  C  T   0   0      56
 
 temp_dat <- read.csv("meanbottomtemp_atsites.csv", header = T, stringsAsFactors = F)
 head(temp_dat)
+#minor allele frequency=0 across temp data
+#     SNP     CLST MAF  TEMP   
+#1 18502_23  OGD   0  9.22472
+#2 18502_23  SGI   0 10.65276
+#3 18502_23  LAS   0 11.29388
+#4 18502_23  JER   0  9.95314
+#5 18502_23  TOF   0 10.83483
+#6 18502_23  CRA   0 10.90472
 
 allele_freq$TEMP <- rep(temp_dat$TEMP, length(unique(allele_freq$SNP)))
-allele_freq
+allele_freq 
 
 allele_freq_temp <- select(allele_freq, c(SNP, MAF, TEMP))
 head(allele_freq_temp)
+#   SNP      MAF  TEMP
+#1 18276_19   0  9.22472
+#2 18276_19   0 10.65276
+#3 18276_19   0 11.29388
+#4 18276_19   0  9.95314
+#5 18276_19   0 10.83483
+#6 18276_19   0 10.90472
 
 ## 2. perform correlations between allele frequencies at each site and environment (mean bottom temperature) per locus
 
@@ -21,11 +44,19 @@ correlations_by_snp <- allele_freq_temp %>%
   summarize(COR=cor(TEMP, MAF))
 
 correlations_by_snp
+head(correlations_by_snp)
+#list all SNPs
+#    SNP      COR
+#1 101_21   -0.323  (-)
+#2 10406_30  0.541  (+)
+#3 13062_15 -0.0887 (-)
+#4 15144_18  0.548 (+)
+#5 18276_19 -0.603 (-)
+#6 18276_22 -0.622 (-)
 
+## 3. Convert variant call format file (vcf) with 71 outlier SNPs to 012 format with vcftools then make .txt file and read in here 
 
-## 3. Convert vcf with 71 outlier SNPs to 012 format with vcftools then make .txt file and read in here 
-
-snps <- read.table("candidates_012.txt", header = F, stringsAsFactors = F)
+snps <- read.table("candidates_012.txt", header = F, stringsAsFactors = F) ##dont have this file####
 dim(snps)
 snps <- snps[,-1]
 

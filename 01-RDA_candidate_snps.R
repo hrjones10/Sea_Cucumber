@@ -80,7 +80,7 @@ anova(rda1)
 anova(rda1, by = "axis") 
 #this considers all of the variation across each RDA (1-14) rather than one model with 14 Df
 
-##################################################################PART 2
+####################PART 2#
 
 #### DETECT SNP OUTLIERS -->   "X84198_24= SNP"
 
@@ -104,8 +104,8 @@ cand2.3SD <- outliers(load.rda[,2], 3)
 
 ncand1.3SD <- length(cand1.3SD)
 ncand2.3SD <- length(cand2.3SD)
-ncand1.3SD
-ncand2.3SD #53
+ncand1.3SD #53  
+ncand2.3SD #12
 
 ncand <- ncand1.3SD+ncand2.3SD  
 ncand #65
@@ -118,8 +118,13 @@ cand2.3SD.df <- cbind.data.frame(rep(2, times = length(cand2.3SD)), names(cand2.
 cand <- rbind(cand1.3SD.df, cand2.3SD.df)
 cand$snp <- as.character(cand$snp) #loading=??####
 
-cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors
+cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns
 colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss")
+
+#Joe's help####
+length(cand.mat[i,]) #8
+length(apply(env.scale,2,function(x) cor(x,snp.gen))) #14... should match... 
+#also names of columns in env.scale file do not match cand.mat column names...
 
 
 for (i in 1:length(cand$snp)) {
@@ -128,7 +133,9 @@ for (i in 1:length(cand$snp)) {
   cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
 } ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
 
+View(env.scale)
 View(snp.mat)
+
 full.cand.df <- cbind(cand, cand.mat)
 full.cand.df
 
