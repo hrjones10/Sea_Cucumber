@@ -7,8 +7,7 @@ library(vegan)
 
 ## SNP DATA 
 snps <- read.table("3699snps_freqs.txt", header = T)
-
-# convert to matrix
+View(snps)# convert to matrix
 snp.mat <- as.matrix(snps)
 
 # create vector of Site names
@@ -26,8 +25,8 @@ rownames(env1) <- env1$Site
 rownames(env1)
 View(env1) #file looks good to me
 
-# order rows to match snps
-env1 <- env1[match(popnames, env1$Site), ] #need to capitalize "Site", be sure to check this on other scripts ####
+# order rows to match snps that are correlated across environmental gradient
+env1 <- env1[match(popnames, env1$Site), ] #need to capitalize "Site", be sure to check this on other scripts 
 View(env1)
 # separate lat/long and env vars
 coords <- env1[,2:3]
@@ -72,7 +71,7 @@ RsquareAdj(rda1) #why take R squared--> correlation between the variables; perce
 anova(rda1) 
 #999 permutations--> randomize the data to generate a null dist; ran model 1,000 times (randomly assign members to various groups)
 #not assuming normality, just generating distribution
-#is test statistic more significant in real data than the randomized dataset
+#is test statistic more significant in real data than the randomized dataset X999 runs
 
 #readout:      Df   Variance    F     Pr(>F)  
 #Model        14   0.064515  1.1907   0.015 *
@@ -83,7 +82,7 @@ anova(rda1, by = "axis")
 
 ##################################################################PART 2
 
-#### DETECT OUTLIERS   
+#### DETECT SNP OUTLIERS -->   "X84198_24= SNP"
 
 # Function for detecting outliers (from Forester et al. 2018) #should we check this paper out?####
 outliers <- function(x,z){
@@ -106,10 +105,10 @@ cand2.3SD <- outliers(load.rda[,2], 3)
 ncand1.3SD <- length(cand1.3SD)
 ncand2.3SD <- length(cand2.3SD)
 ncand1.3SD
-ncand2.3SD
+ncand2.3SD #53
 
 ncand <- ncand1.3SD+ncand2.3SD  
-ncand
+ncand #65
 
 ### 
 cand1.3SD.df <- cbind.data.frame(rep(1, times = length(cand1.3SD)), names(cand1.3SD), unname(cand1.3SD)); colnames(cand1.3SD.df) <- c("axis", "snp", "loading")
@@ -117,7 +116,7 @@ cand1.3SD.df <- cbind.data.frame(rep(1, times = length(cand1.3SD)), names(cand1.
 cand2.3SD.df <- cbind.data.frame(rep(2, times = length(cand2.3SD)), names(cand2.3SD), unname(cand2.3SD)); colnames(cand2.3SD.df) <- c("axis", "snp", "loading")
 
 cand <- rbind(cand1.3SD.df, cand2.3SD.df)
-cand$snp <- as.character(cand$snp)
+cand$snp <- as.character(cand$snp) #loading=??####
 
 cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors
 colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss")
@@ -127,9 +126,9 @@ for (i in 1:length(cand$snp)) {
   nam <- cand[i,2]
   snp.gen <- snp.mat[,nam]
   cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
-}
+} ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
 
-
+View(snp.mat)
 full.cand.df <- cbind(cand, cand.mat)
 full.cand.df
 
