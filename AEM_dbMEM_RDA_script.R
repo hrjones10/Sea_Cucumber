@@ -3,8 +3,8 @@
 library(vegan)
 library(reshape2)
 library(dplyr)
-library(SoDA) #no package?
-library(adespatial) #no package?
+library(SoDA)
+library(adespatial)
 library(ade4)
 library(spdep)
 
