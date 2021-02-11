@@ -67,9 +67,12 @@ summary(rda1) #summary output of all 6 RDAs
 
 # considers partioning of the variance, species (population here) scores and site scores (weighted sums of species scores)
 
-RsquareAdj(rda1) #why take R squared? ####
+RsquareAdj(rda1) #why take R squared--> correlation between the variables; percent of variance explained--> variation in y explained by variation in x
 #$r.squared= 0.6493902 + $adj.r.squared- 0.1039971
-anova(rda1) #999 permutations--> what does this mean? #### 
+anova(rda1) 
+#999 permutations--> randomize the data to generate a null dist; ran model 1,000 times (randomly assign members to various groups)
+#not assuming normality, just generating distribution
+#is test statistic more significant in real data than the randomized dataset
 
 #readout:      Df   Variance    F     Pr(>F)  
 #Model        14   0.064515  1.1907   0.015 *
@@ -84,12 +87,12 @@ anova(rda1, by = "axis")
 
 # Function for detecting outliers (from Forester et al. 2018) #should we check this paper out?####
 outliers <- function(x,z){
-  lims <- mean(x) + c(-1, 1) * z * sd(x)                   # find +/- z sd from mean loading     
+  lims <- mean(x) + c(-1, 1) * z * sd(x)                  
+  # find +/- z sd from mean loading     
   x[x < lims[1] | x > lims[2]]   # locus names in these tails
 }
 
-
-# Outliers from the rda with all env vars
+# Outliers from the RDA with all env vars considered
 
 ## get the loadings
 load.rda <- summary(rda1)$species[,1:3]
