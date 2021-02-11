@@ -4,17 +4,21 @@ library(ade4)
 library(ggplot2)
 library(reshape)
 library(stringr)
-library(stackr) #v.0.4.5
+library(stackr) #v.0.4.5 
+#stackr download--> older package https://rdrr.io/github/thierrygosselin/stackr/
+install.packages("remotes")
+remotes::install_github("thierrygosselin/stackr")
 
 strata <- read.table("strata.cucumbers.717ind.txt", header = T)
 
 ### Read in the VCF file as genind object
-CUCUMBER_genind <- vcf2genind(
+#can't seem to use function "vcfr2genind" ####
+CUCUMBER_genind <- vcfR2genind(
   data = "filtered_2719neutral_snps.recode.vcf",
   strata = strata,
   imputation.method = NULL,
   parallel.core = 4)
-  
+
 gen.dat <- CUCUMBER_genind$genind.no.imputation
 
 #####################################
