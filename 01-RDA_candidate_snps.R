@@ -9,6 +9,7 @@ library(vegan)
 snps <- read.table("3699snps_freqs.txt", header = T)
 View(snps)# convert to matrix
 snp.mat <- as.matrix(snps)
+View(snp.mat)
 
 # create vector of Site names
 popnames <- rownames(snp.mat)
@@ -53,18 +54,23 @@ vif(env.vars)
 #13                  Mean_bottom_salinity   3.830173
 #14         Mean_surface_current_velocity   2.552170
 
+###make sure you are dropping VIF like mean surface temp####
 
 # scale predictors
 env.scale <- scale(env.vars, scale = T, center = T)
 
-# run reduncancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (9 in total)
+# run redundancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (14 in total)
 rda1 <- rda(snp.hel ~., data = as.data.frame(env.scale))
+summary(rda1)
+plot(rda1)
+
 rda0 <- rda(snp.hel ~ 1, data = as.data.frame(env.scale))
+plot(rda0)
 
 summary(rda1) #summary output of all 6 RDAs
 #Call: rda(formula = snp.hel ~ Mean_surface_salinity + Minimum_surface_salinity +      Maximum_surface_salinity + Mean_surface_temperature + Minimum_surface_temperature +      Maximum_surface_temperature + Mean_bottom_chlorophyll_concentration +      Mean_bottom_current_velocity + Mean_bottom_dissolved_oxygen +      Mean_bottom_temperature + Maximum_bottom_temperature + Minimum_bottom_temperature +      Mean_bottom_salinity + Mean_surface_current_velocity, data = as.data.frame(env.scale)) 
 
-# considers partioning of the variance, species (population here) scores and site scores (weighted sums of species scores)
+# considers partitioning of the variance, species (population here) scores and site scores (weighted sums of species scores)
 
 RsquareAdj(rda1) #why take R squared--> correlation between the variables; percent of variance explained--> variation in y explained by variation in x
 #$r.squared= 0.6493902 + $adj.r.squared- 0.1039971
@@ -116,7 +122,7 @@ cand1.3SD.df <- cbind.data.frame(rep(1, times = length(cand1.3SD)), names(cand1.
 cand2.3SD.df <- cbind.data.frame(rep(2, times = length(cand2.3SD)), names(cand2.3SD), unname(cand2.3SD)); colnames(cand2.3SD.df) <- c("axis", "snp", "loading")
 
 cand <- rbind(cand1.3SD.df, cand2.3SD.df)
-cand$snp <- as.character(cand$snp) #loading=??####
+cand$snp <- as.character(cand$snp) #loading=how important an enviro axis is to SNP####
 
 cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns
 colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss")
@@ -126,12 +132,28 @@ length(cand.mat[i,]) #8
 length(apply(env.scale,2,function(x) cor(x,snp.gen))) #14... should match... 
 #also names of columns in env.scale file do not match cand.mat column names...
 
-
+#corr between enviro and allele freq @ specific SNP
 for (i in 1:length(cand$snp)) {
   nam <- cand[i,2]
   snp.gen <- snp.mat[,nam]
   cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
 } ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
+
+apply(env.scale,2,function(x) cor(x,snp.gen))
+#Mean_surface_salinity              Minimum_surface_salinity 
+#0.18107736                            0.26385105 
+#Maximum_surface_salinity              Mean_surface_temperature 
+#0.12919691                           -0.17090813 
+#Minimum_surface_temperature           Maximum_surface_temperature 
+#-0.24348353                            0.15511505 
+#Mean_bottom_chlorophyll_concentration          Mean_bottom_current_velocity 
+#-0.28749631                            0.24724551 
+#Mean_bottom_dissolved_oxygen               Mean_bottom_temperature 
+#0.09651374                           -0.32276679 
+#Maximum_bottom_temperature            Minimum_bottom_temperature 
+#-0.14440751                           -0.15871449 
+#Mean_bottom_salinity         Mean_surface_current_velocity 
+#0.49810707                            0.10033776 
 
 View(env.scale)
 View(snp.mat)
