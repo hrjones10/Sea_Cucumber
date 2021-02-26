@@ -132,7 +132,6 @@ length(cand.mat[i,]) #8
 length(apply(env.scale,2,function(x) cor(x,snp.gen))) #14... should match... 
 #also names of columns in env.scale file do not match cand.mat column names...
 
-
 ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
 
 apply(env.scale,2,function(x) cor(x,snp.gen))
@@ -160,21 +159,27 @@ for (i in 1:length(cand$snp)) {
   snp.gen <- snp.mat[,nam]
   cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
 } 
-#now that you have your new matrix, see correlations!
 
+full.cand.df <-read.csv("cand.mat.csv")
+View (full.cand.df)
+
+#now that you have your new matrix, see correlations!
+View(cand)
+##SKIP?
 full.cand.df <- cbind(cand, cand.mat)
 full.cand.df
 
 cand$snp[duplicated(cand$snp)]  # check for duplicates
-#no character repeats
+#no character repeats character(0)
 
 # To determine which of the predictors each candidate SNP is most strongly correlated with:
 
 for (i in 1:length(full.cand.df$snp)) {
   bar <- full.cand.df[i,]
   full.cand.df[i,12] <- names(which.max(abs(bar[4:11]))) # gives the variable
-  full.cand.df[i,13] <- max(abs(bar[4:11]))              # gives the correlation
+  full.cand.df[i,13] <- max(abs(bar[4:11]))   # gives the correlation
 }
+View(full.cand.df)
 
 colnames(full.cand.df)[12] <- "predictor"
 colnames(full.cand.df)[13] <- "correlation"
@@ -182,5 +187,13 @@ colnames(full.cand.df)[13] <- "correlation"
 full.cand.df
 
 table(full.cand.df$predictor)  
-table(full.cand.df$axis) 
 
+#BO2_curvelmean_bdmean- 3 
+#BO2_salinitymean_bdmean-3  
+#BO2_tempmean_bdmean- 51
+#BO2_tempmin_bdmean- 1
+#PC2-1
+
+table(full.cand.df$axis) 
+# 1  2 
+#51  8 
