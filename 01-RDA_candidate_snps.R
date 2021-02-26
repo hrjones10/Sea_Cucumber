@@ -124,20 +124,16 @@ cand2.3SD.df <- cbind.data.frame(rep(2, times = length(cand2.3SD)), names(cand2.
 cand <- rbind(cand1.3SD.df, cand2.3SD.df)
 cand$snp <- as.character(cand$snp) #loading=how important an enviro axis is to SNP####
 
-cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns
-colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss")
+cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns; 65 rows for cand SNPs
+colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss") #empty candidate matrix
 
 #Joe's help####
 length(cand.mat[i,]) #8
 length(apply(env.scale,2,function(x) cor(x,snp.gen))) #14... should match... 
 #also names of columns in env.scale file do not match cand.mat column names...
 
-#corr between enviro and allele freq @ specific SNP
-for (i in 1:length(cand$snp)) {
-  nam <- cand[i,2]
-  snp.gen <- snp.mat[,nam]
-  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
-} ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
+
+###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
 
 apply(env.scale,2,function(x) cor(x,snp.gen))
 #Mean_surface_salinity              Minimum_surface_salinity 
@@ -158,10 +154,19 @@ apply(env.scale,2,function(x) cor(x,snp.gen))
 View(env.scale)
 View(snp.mat)
 
+#corr between enviro and allele freq @ specific SNP
+for (i in 1:length(cand$snp)) {
+  nam <- cand[i,2] #SNP name
+  snp.gen <- snp.mat[,nam]
+  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
+} 
+#now that you have your new matrix, see correlations!
+
 full.cand.df <- cbind(cand, cand.mat)
 full.cand.df
 
 cand$snp[duplicated(cand$snp)]  # check for duplicates
+#no character repeats
 
 # To determine which of the predictors each candidate SNP is most strongly correlated with:
 
