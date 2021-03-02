@@ -18,7 +18,7 @@ popnames
 
 # Hellinger transformation of vector of abundances--> relative species composition rather than magnitude of abundance values... accounts for moderately skewed datasets
 snp.hel <- decostand(snp.mat, method = "hellinger")
-
+View(snp.hel)
 ## Environmental DATA
 
 env1 <- read.table("env_predictors.txt", header = T)
@@ -154,20 +154,21 @@ View(env.scale)
 View(snp.mat)
 
 #corr between enviro and allele freq @ specific SNP
-for (i in 1:length(cand$snp)) {
-  nam <- cand[i,2] #SNP name
-  snp.gen <- snp.mat[,nam]
-  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
-} 
+#for (i in 1:length(cand$snp)) {
+#  nam <- cand[i,2] #SNP name
+#  snp.gen <- snp.mat[,nam]
+#  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
+#} 
 
 full.cand.df <-read.csv("cand.mat.csv")
 View (full.cand.df)
 
 #now that you have your new matrix, see correlations!
 View(cand)
-##SKIP?
-full.cand.df <- cbind(cand, cand.mat)
-full.cand.df
+
+##SKIP?#
+#full.cand.df <- cbind(cand, cand.mat)
+#full.cand.df
 
 cand$snp[duplicated(cand$snp)]  # check for duplicates
 #no character repeats character(0)
@@ -184,7 +185,10 @@ View(full.cand.df)
 colnames(full.cand.df)[12] <- "predictor"
 colnames(full.cand.df)[13] <- "correlation"
 
-full.cand.df
+View(full.cand.df)
+
+#how to plot the revised RDA?####
+
 
 table(full.cand.df$predictor)  
 
