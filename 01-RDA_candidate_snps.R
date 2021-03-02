@@ -124,20 +124,15 @@ cand2.3SD.df <- cbind.data.frame(rep(2, times = length(cand2.3SD)), names(cand2.
 cand <- rbind(cand1.3SD.df, cand2.3SD.df)
 cand$snp <- as.character(cand$snp) #loading=how important an enviro axis is to SNP####
 
-cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns
-colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss")
+cand.mat <- matrix(nrow=(ncand), ncol=8)  # ncol = number of predictors/columns; 65 rows for cand SNPs
+colnames(cand.mat) <- c("PCA1", "PCA2", "PCA3", "BO2_curvelmean_bdmean", "BO2_tempmean_bdmean", "BO2_tempmin_bdmean", "BO2_salinitymean_bdmean", "BO2_curvelmean_ss") #empty candidate matrix
 
 #Joe's help####
 length(cand.mat[i,]) #8
 length(apply(env.scale,2,function(x) cor(x,snp.gen))) #14... should match... 
 #also names of columns in env.scale file do not match cand.mat column names...
 
-#corr between enviro and allele freq @ specific SNP
-for (i in 1:length(cand$snp)) {
-  nam <- cand[i,2]
-  snp.gen <- snp.mat[,nam]
-  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
-} ###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
+###ERROR:in cand.mat[i, ] <- apply(env.scale, 2, function(x) cor(x, snp.gen)) :  number of items to replace is not a multiple of replacement length####
 
 apply(env.scale,2,function(x) cor(x,snp.gen))
 #Mean_surface_salinity              Minimum_surface_salinity 
@@ -158,18 +153,33 @@ apply(env.scale,2,function(x) cor(x,snp.gen))
 View(env.scale)
 View(snp.mat)
 
+#corr between enviro and allele freq @ specific SNP
+for (i in 1:length(cand$snp)) {
+  nam <- cand[i,2] #SNP name
+  snp.gen <- snp.mat[,nam]
+  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
+} 
+
+full.cand.df <-read.csv("cand.mat.csv")
+View (full.cand.df)
+
+#now that you have your new matrix, see correlations!
+View(cand)
+##SKIP?
 full.cand.df <- cbind(cand, cand.mat)
 full.cand.df
 
 cand$snp[duplicated(cand$snp)]  # check for duplicates
+#no character repeats character(0)
 
 # To determine which of the predictors each candidate SNP is most strongly correlated with:
 
 for (i in 1:length(full.cand.df$snp)) {
   bar <- full.cand.df[i,]
   full.cand.df[i,12] <- names(which.max(abs(bar[4:11]))) # gives the variable
-  full.cand.df[i,13] <- max(abs(bar[4:11]))              # gives the correlation
+  full.cand.df[i,13] <- max(abs(bar[4:11]))   # gives the correlation
 }
+View(full.cand.df)
 
 colnames(full.cand.df)[12] <- "predictor"
 colnames(full.cand.df)[13] <- "correlation"
@@ -177,5 +187,13 @@ colnames(full.cand.df)[13] <- "correlation"
 full.cand.df
 
 table(full.cand.df$predictor)  
-table(full.cand.df$axis) 
 
+#BO2_curvelmean_bdmean- 3 
+#BO2_salinitymean_bdmean-3  
+#BO2_tempmean_bdmean- 51
+#BO2_tempmin_bdmean- 1
+#PC2-1
+
+table(full.cand.df$axis) 
+# 1  2 
+#51  8 
