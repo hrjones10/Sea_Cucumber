@@ -18,7 +18,7 @@ popnames
 
 # Hellinger transformation of vector of abundances--> relative species composition rather than magnitude of abundance values... accounts for moderately skewed datasets
 snp.hel <- decostand(snp.mat, method = "hellinger")
-
+View(snp.hel)
 ## Environmental DATA
 
 env1 <- read.table("env_predictors.txt", header = T)
@@ -48,18 +48,18 @@ vif(env.vars)
 #7  Mean_bottom_chlorophyll_concentration  26.620819
 #8           Mean_bottom_current_velocity   5.438088
 #9           Mean_bottom_dissolved_oxygen  11.829937
-#10               Mean_bottom_temperature  79.323197
+#10               Mean_bottom_temperature  79.323197 
 #11            Maximum_bottom_temperature  39.718829
-#12            Minimum_bottom_temperature  23.493223
-#13                  Mean_bottom_salinity   3.830173
-#14         Mean_surface_current_velocity   2.552170
+#12            Minimum_bottom_temperature  23.493223 
+#13                  Mean_bottom_salinity   3.830173 
+#14         Mean_surface_current_velocity   2.552170 
 
 ###make sure you are dropping VIF like mean surface temp####
 
 # scale predictors
 env.scale <- scale(env.vars, scale = T, center = T)
 
-# run redundancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (14 in total)
+# run redundancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (14 RDAs in total)
 rda1 <- rda(snp.hel ~., data = as.data.frame(env.scale))
 summary(rda1)
 plot(rda1)
@@ -154,20 +154,21 @@ View(env.scale)
 View(snp.mat)
 
 #corr between enviro and allele freq @ specific SNP
-for (i in 1:length(cand$snp)) {
-  nam <- cand[i,2] #SNP name
-  snp.gen <- snp.mat[,nam]
-  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
-} 
+#for (i in 1:length(cand$snp)) {
+#  nam <- cand[i,2] #SNP name
+#  snp.gen <- snp.mat[,nam]
+#  cand.mat[i,] <- apply(env.scale,2,function(x) cor(x,snp.gen))
+#} 
 
 full.cand.df <-read.csv("cand.mat.csv")
 View (full.cand.df)
 
 #now that you have your new matrix, see correlations!
 View(cand)
-##SKIP?
-full.cand.df <- cbind(cand, cand.mat)
-full.cand.df
+
+##SKIP?#
+#full.cand.df <- cbind(cand, cand.mat)
+#full.cand.df
 
 cand$snp[duplicated(cand$snp)]  # check for duplicates
 #no character repeats character(0)
@@ -184,7 +185,10 @@ View(full.cand.df)
 colnames(full.cand.df)[12] <- "predictor"
 colnames(full.cand.df)[13] <- "correlation"
 
-full.cand.df
+View(full.cand.df)
+
+#how to plot the revised RDA?####
+
 
 table(full.cand.df$predictor)  
 
@@ -197,3 +201,40 @@ table(full.cand.df$predictor)
 table(full.cand.df$axis) 
 # 1  2 
 #51  8 
+
+#creating the plot: ####
+library(devtools)
+install_github("vqv/ggbiplot")
+sal.temp.pca <- prcomp(env1[,c(4:9)], center = TRUE,scale. = TRUE)
+summary(sal.temp.pca)
+
+#Importance of components:
+#                         PC1    PC2    PC3     PC4     PC5     PC6
+#Standard deviation     1.8945 1.1956 0.9132 0.30510 0.22632 0.05514
+#Proportion of Variance 0.5982 0.2383 0.1390 0.01551 0.00854 0.00051
+#Cumulative Proportion  0.5982 0.8364 0.9754 0.99096 0.99949 1.00000
+
+
+library(ggbiplot)
+ggbiplot(sal.temp.pca)
+
+
+env2<-env1[,4:9]
+bob<-prcomp(env2)
+bob$x
+bob$x[,1] #gets you values for PC1, etc.
+bob<-prcomp(env2,scale=T,center=T)
+
+bob$x[,1:3]
+pc1to3 <-bob$x[,1:3]
+View(pc1to3) #new file with PCA1, PCA2 and PCA3
+d <- pc1to3
+Site <- rownames(d)
+rownames(d) <- NULL
+data <- cbind(Site,d)
+View(data) #put site column in
+sub.env1 <- env1[,c(1,10:17)]
+View(sub.env1) #enviro variables
+total <- merge(data, sub.env1,by="Site") #merge enviro and PCAs
+View(total) #yay dataset complete! :) 
+
