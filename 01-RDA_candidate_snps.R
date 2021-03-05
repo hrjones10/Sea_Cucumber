@@ -236,5 +236,11 @@ View(data) #put site column in
 sub.env1 <- env1[,c(1,10:17)]
 View(sub.env1) #enviro variables
 total <- merge(data, sub.env1,by="Site") #merge enviro and PCAs
-View(total) #yay dataset complete! :) 
+View(total) 
+
+total2 <- total[,-1]
+rownames(total2) <- total[,1]
+View(total2)
+##VIF it
+vif(total2) #yay dataset complete! :) 
 
