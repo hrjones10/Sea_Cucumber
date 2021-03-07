@@ -4,87 +4,86 @@
 
 library(usdm)
 library(vegan)
+library(devtools)
+install_github("vqv/ggbiplot")
 
-## SNP DATA 
+###### SNP DATA 
 snps <- read.table("3699snps_freqs.txt", header = T)
-View(snps)# convert to matrix
 snp.mat <- as.matrix(snps)
-View(snp.mat)
 
 # create vector of Site names
 popnames <- rownames(snp.mat)
-popnames 
 #"OGD" "QUA" "HOP" "TBL" "CAL" "TOL" "PRI" "LEG" "JUA" "SEL" "REN" "SGI" "MAZ" "AK1" "AK2" "AK3" "AK4" "LAS" "JER" "TOF" "CRA" "RBY" "SHE" "MAL"
 
 # Hellinger transformation of vector of abundances--> relative species composition rather than magnitude of abundance values... accounts for moderately skewed datasets
 snp.hel <- decostand(snp.mat, method = "hellinger")
-View(snp.hel)
-## Environmental DATA
 
+## Environmental DATA 
 env1 <- read.table("env_predictors.txt", header = T)
 rownames(env1) <- env1$Site
-rownames(env1)
-View(env1) #file looks good to me
 
 # order rows to match snps that are correlated across environmental gradient
 env1 <- env1[match(popnames, env1$Site), ] #need to capitalize "Site", be sure to check this on other scripts 
-View(env1)
+
 # separate lat/long and env vars
 coords <- env1[,2:3]
 env.vars <- env1[,4:ncol(env1)]
 
-env.vars #okay good got data
+# run a PCA on surface salinity and surface temperature variables
+# RDA analysis uses PC1, PC2, and PC3 from this PCA as input environmental variables
+sal.temp.pca <- prcomp(env1[,c(4:9)], center = T, scale = T)
+summary(sal.temp.pca)
+#Importance of components:
+#                         PC1    PC2    PC3     PC4     PC5     PC6
+#Standard deviation     1.8945 1.1956 0.9132 0.30510 0.22632 0.05514
+#Proportion of Variance 0.5982 0.2383 0.1390 0.01551 0.00854 0.00051
+#Cumulative Proportion  0.5982 0.8364 0.9754 0.99096 0.99949 1.00000
 
+# combine PC1-3 with five raw variables they included
+env <- as.data.frame(cbind(sal.temp.pca$x[,1:3], env.vars[,c(8,10,12:14)]))
+
+vif(env)
 # check variance inflation factor (VIF) of environmental variables
 # VIF checks for for multicollinearity among variables
-vif(env.vars)
-#Variables        VIF
-#1                  Mean_surface_salinity 489.123522
-#2               Minimum_surface_salinity  41.865633
-#3               Maximum_surface_salinity 285.882143
-#4               Mean_surface_temperature  93.946589
-#5            Minimum_surface_temperature  18.261385
-#6            Maximum_surface_temperature  40.639257
-#7  Mean_bottom_chlorophyll_concentration  26.620819
-#8           Mean_bottom_current_velocity   5.438088
-#9           Mean_bottom_dissolved_oxygen  11.829937
-#10               Mean_bottom_temperature  79.323197 
-#11            Maximum_bottom_temperature  39.718829
-#12            Minimum_bottom_temperature  23.493223 
-#13                  Mean_bottom_salinity   3.830173 
-#14         Mean_surface_current_velocity   2.552170 
-
-###make sure you are dropping VIF like mean surface temp####
+# Variables      VIF
+# 1                           PC1 2.000309
+# 2                           PC2 1.827928
+# 3                           PC3 2.002769
+# 4  Mean_bottom_current_velocity 2.116447
+# 5       Mean_bottom_temperature 1.394212
+# 6    Minimum_bottom_temperature 2.669877
+# 7          Mean_bottom_salinity 1.322096
+# 8 Mean_surface_current_velocity 1.575337
+class(env)
 
 # scale predictors
-env.scale <- scale(env.vars, scale = T, center = T)
-
+env <- as.data.frame(scale(env, scale = T, center = T))
+summary(env.scale)
 # run redundancy analysis (RDA) between hellinger transformed SNPs and all environmental variables (14 RDAs in total)
-rda1 <- rda(snp.hel ~., data = as.data.frame(env.scale))
+rda1 <- rda(snp.hel ~., data = env)
 summary(rda1)
 plot(rda1)
 
 rda0 <- rda(snp.hel ~ 1, data = as.data.frame(env.scale))
 plot(rda0)
-
-summary(rda1) #summary output of all 6 RDAs
-#Call: rda(formula = snp.hel ~ Mean_surface_salinity + Minimum_surface_salinity +      Maximum_surface_salinity + Mean_surface_temperature + Minimum_surface_temperature +      Maximum_surface_temperature + Mean_bottom_chlorophyll_concentration +      Mean_bottom_current_velocity + Mean_bottom_dissolved_oxygen +      Mean_bottom_temperature + Maximum_bottom_temperature + Minimum_bottom_temperature +      Mean_bottom_salinity + Mean_surface_current_velocity, data = as.data.frame(env.scale)) 
-
 # considers partitioning of the variance, species (population here) scores and site scores (weighted sums of species scores)
 
 RsquareAdj(rda1) #why take R squared--> correlation between the variables; percent of variance explained--> variation in y explained by variation in x
-#$r.squared= 0.6493902 + $adj.r.squared- 0.1039971
+#$r.squared= 0.4020508 + $adj.r.squared- 0.08314461
 anova(rda1) 
 #999 permutations--> randomize the data to generate a null dist; ran model 1,000 times (randomly assign members to various groups)
 #not assuming normality, just generating distribution
 #is test statistic more significant in real data than the randomized dataset X999 runs
 
 #readout:      Df   Variance    F     Pr(>F)  
-#Model        14   0.064515  1.1907   0.015 *
-#Residual     9    0.034832     
+#   Model      8    0.039943  1.2607  0.004 **
+#   Residual  15    0.059405   
 
 anova(rda1, by = "axis") 
 #this considers all of the variation across each RDA (1-14) rather than one model with 14 Df
+
+
+##### BROOKE LEFT OFF HERE
 
 ####################PART 2#
 
@@ -202,17 +201,6 @@ table(full.cand.df$axis)
 # 1  2 
 #51  8 
 
-#creating the plot: ####
-library(devtools)
-install_github("vqv/ggbiplot")
-sal.temp.pca <- prcomp(env1[,c(4:9)], center = TRUE,scale. = TRUE)
-summary(sal.temp.pca)
-
-#Importance of components:
-#                         PC1    PC2    PC3     PC4     PC5     PC6
-#Standard deviation     1.8945 1.1956 0.9132 0.30510 0.22632 0.05514
-#Proportion of Variance 0.5982 0.2383 0.1390 0.01551 0.00854 0.00051
-#Cumulative Proportion  0.5982 0.8364 0.9754 0.99096 0.99949 1.00000
 
 
 library(ggbiplot)
@@ -224,6 +212,23 @@ bob<-prcomp(env2)
 bob$x
 bob$x[,1] #gets you values for PC1, etc.
 bob<-prcomp(env2,scale=T,center=T)
+
+sue<-cbind(bob$x[,1:3], env.scale[,c(8,10,12:14)]) # makes the row naming faster
+
+
+sue<-cbind(bob$x[,1:3], env1[,10:17])
+
+head(sue)
+summary(sue)
+
+
+
+View(sue)
+
+vif(sue)
+
+
+
 
 bob$x[,1:3]
 pc1to3 <-bob$x[,1:3]
@@ -243,4 +248,5 @@ rownames(total2) <- total[,1]
 View(total2)
 ##VIF it
 vif(total2) #yay dataset complete! :) 
+
 
